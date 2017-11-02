@@ -25,7 +25,11 @@ class ObjectPool {
 
     struct Chunk {
         unsigned char data[MAX_OBJ_SIZE];
+<<<<<<< HEAD
         Chunk* nextAvailable;
+=======
+        std::atomic<Chunk*> nextAvailable;
+>>>>>>> 8a0f05c8116fc552bd3e9122608de99b778a012d
     };
     struct Page {
         Chunk* chunks;
@@ -53,7 +57,11 @@ public:
 
 
     {
+<<<<<<< HEAD
         firstAvailableChunk = &(pages.front().chunks[0]);
+=======
+        firstAvailableChunk.store( &(pages.front().chunks[0]) );
+>>>>>>> 8a0f05c8116fc552bd3e9122608de99b778a012d
     }
 
     ~ObjectPool() {
@@ -89,8 +97,14 @@ public:
                 if (capacity == minCapacity) {
                     isActivateReplenish = true;
                 }
+<<<<<<< HEAD
                 chunkToUse = firstAvailableChunk;
                 firstAvailableChunk = chunkToUse->nextAvailable;
+=======
+                chunkToUse = firstAvailableChunk.load();
+                Chunk* nextAvailable = chunkToUse->nextAvailable.load();
+                firstAvailableChunk.store(nextAvailable);
+>>>>>>> 8a0f05c8116fc552bd3e9122608de99b778a012d
 
             }
 
@@ -114,7 +128,11 @@ public:
         object->~OBJECT();
         std::lock_guard<SpinLockMutex> lk(spinLockMutex);
         Chunk* freeChunk = reinterpret_cast<Chunk*>(object);
+<<<<<<< HEAD
         freeChunk->nextAvailable = firstAvailableChunk;
+=======
+        freeChunk->nextAvailable = firstAvailableChunk.load();
+>>>>>>> 8a0f05c8116fc552bd3e9122608de99b778a012d
         firstAvailableChunk = freeChunk;
         ++capacity;
     }
@@ -140,6 +158,11 @@ private:
                 return;
             }
             std::lock_guard<std::mutex> lk(replenishMutex, std::adopt_lock);
+<<<<<<< HEAD
+=======
+            // modifying isReplenishNeeded under mutex in order to correctly publish
+
+>>>>>>> 8a0f05c8116fc552bd3e9122608de99b778a012d
             isReplenishNeeded = true; // modifying isReplenishNeeded under mutex in order to correctly publish
                                       // the modification to the waiting thread.
         }
@@ -159,9 +182,15 @@ private:
             {
                 std::lock_guard<SpinLockMutex> spinlockMutexGuard(spinLockMutex);
                 capacity += newPageSize;
+<<<<<<< HEAD
                 Chunk* nextAvailableChunk = firstAvailableChunk;
                 pages.front().chunks[ pages.front().size - 1 ].nextAvailable = nextAvailableChunk;
                 firstAvailableChunk = &(pages.front().chunks[0]);
+=======
+                Chunk* nextAvailableChunk = firstAvailableChunk.load();
+                pages.front().chunks[ pages.front().size - 1 ].nextAvailable = nextAvailableChunk;
+                firstAvailableChunk.store( &(pages.front().chunks[0]) );
+>>>>>>> 8a0f05c8116fc552bd3e9122608de99b778a012d
             }
             // by that time it is possible that another thread requested the replenish again
             // this situation will be handled by replenishActivatorCV.wait() with predicate that
@@ -170,11 +199,19 @@ private:
     }
 private:
     std::forward_list<Page> pages;
+<<<<<<< HEAD
     ssize_t capacity;
     Chunk* firstAvailableChunk;
     const std::size_t minCapacity;
     const std::size_t newPageSize;
     bool isReplenishNeeded = false;
+=======
+    std::atomic<ssize_t> capacity;
+    std::atomic<Chunk*> firstAvailableChunk;
+    const std::size_t minCapacity;
+    const std::size_t newPageSize;
+    std::atomic<bool> isReplenishNeeded = false;
+>>>>>>> 8a0f05c8116fc552bd3e9122608de99b778a012d
     SpinLockMutex spinLockMutex;
     bool isRunning = true;
     std::mutex replenishMutex;
