@@ -157,6 +157,7 @@ private:
             if (!isRunning) return;
             pages.push_front(Page(newPageSize, nullptr));
             {
+
                 std::lock_guard<SpinLockMutex> spinlockMutexGuard(spinLockMutex);
                 capacity += newPageSize;
                 Chunk* nextAvailableChunk = firstAvailableChunk;
