@@ -91,7 +91,6 @@ public:
                 }
                 chunkToUse = firstAvailableChunk;
                 firstAvailableChunk = chunkToUse->nextAvailable;
-
             }
 
         } while(false);
@@ -115,6 +114,7 @@ public:
         std::lock_guard<SpinLockMutex> lk(spinLockMutex);
         Chunk* freeChunk = reinterpret_cast<Chunk*>(object);
         freeChunk->nextAvailable = firstAvailableChunk;
+        freeChunk->nextAvailable = firstAvailableChunk.load();
         firstAvailableChunk = freeChunk;
         ++capacity;
     }
@@ -162,6 +162,9 @@ private:
                 Chunk* nextAvailableChunk = firstAvailableChunk;
                 pages.front().chunks[ pages.front().size - 1 ].nextAvailable = nextAvailableChunk;
                 firstAvailableChunk = &(pages.front().chunks[0]);
+                Chunk* nextAvailableChunk = firstAvailableChunk.load();
+                pages.front().chunks[ pages.front().size - 1 ].nextAvailable = nextAvailableChunk;
+                firstAvailableChunk.store( &(pages.front().chunks[0]) );
             }
             // by that time it is possible that another thread requested the replenish again
             // this situation will be handled by replenishActivatorCV.wait() with predicate that
