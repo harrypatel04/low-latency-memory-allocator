@@ -1,0 +1,10 @@
+
+Implementation of ObjectPool is located at include directory.
+
+
+Building and running the test program:
+    ./configure
+    make
+    cd test
+    ./low_latency_object_pool_test <thread count> <maxCapacity> <minCapacity>
+     
